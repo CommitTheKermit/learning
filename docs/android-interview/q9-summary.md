@@ -84,6 +84,21 @@
 ※ 화면이 Service와 계속 대화해야 하면 ──▶ Bound Service
 ```
 
+### 상태 조합별 예
+
+Foreground는 혼자 설 수 없음. `startForegroundService()`로 **시작**한 뒤 `startForeground()`로 **승격**하므로 started 상태 위에 올라감.
+
+| 조합 | 어울리는 예 | 이유 |
+| --- | --- | --- |
+| Started + Bound + Foreground | 내비게이션, 음악 재생 | 화면을 꺼도 계속(Started), 사용자가 진행을 알아야 함(Foreground), 화면이 위치·재생 상태를 계속 물어봄(Bound) |
+| Started + Foreground | 사용자가 누른 대용량 파일 업로드 (진행률은 알림으로만) | 앱을 닫아도 끝나야 하고 사용자가 알아야 함. 화면과 대화할 일은 없음 |
+| Bound만 | 블루투스 기기 설정 화면, 다른 앱·시스템에 기능을 제공하는 Service | 화면이 열린 동안만 의미가 있음. 바인딩은 백그라운드 실행 제한의 영향을 받지 않음 |
+| Started + Bound | 앱이 열린 동안의 큰 작업 + 진행률 화면 | 범위가 좁음. Foreground 없는 started Service는 앱이 백그라운드로 가고 몇 분 뒤 시스템이 멈춤 |
+| Started만 | 앱이 화면에 있는 동안 끝나는 짧은 작업 | 범위가 좁음. 급하지 않은 작업은 WorkManager가 대신함 |
+| Bound + Foreground | - | 공식 시작 흐름 밖(문서 설명 없음). bound만인 Service는 마지막 화면이 끊으면 종료되므로 "화면 없이 살아남기"라는 Foreground의 목적과 어긋남 (추론) |
+
+- 고르는 세 질문: 앱을 닫아도 계속되는가(Started), 사용자가 알아야 하는가(Foreground), 화면이 계속 묻는가(Bound).
+
 ---
 
 ### 실전 질문: 안드로이드에서 Started 서비스와 Bound 서비스의 차이점은 무엇이며, 각각 언제 사용해야 하나요?
@@ -118,4 +133,4 @@
 
 ---
 
-출처: 『매니페스트 안드로이드 인터뷰』 52~62쪽, Android Developers [Services overview](https://developer.android.com/develop/background-work/services), [Bound services overview](https://developer.android.com/develop/background-work/services/bound-services), [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager)
+출처: 『매니페스트 안드로이드 인터뷰』 52~62쪽, Android Developers [Services overview](https://developer.android.com/develop/background-work/services), [Bound services overview](https://developer.android.com/develop/background-work/services/bound-services), [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager), [Launch a foreground service](https://developer.android.com/develop/background-work/services/fgs/launch), [Background execution limits](https://developer.android.com/about/versions/oreo/background)
