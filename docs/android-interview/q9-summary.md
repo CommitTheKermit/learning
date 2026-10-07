@@ -99,6 +99,24 @@ Foreground는 혼자 설 수 없음. `startForegroundService()`로 **시작**한
 
 - 고르는 세 질문: 앱을 닫아도 계속되는가(Started), 사용자가 알아야 하는가(Foreground), 화면이 계속 묻는가(Bound).
 
+### 스레드가 아니라 Service가 맞는 경우
+
+시스템은 스레드가 아니라 **컴포넌트**를 보고 어떤 프로세스를 종료할지 정함. 화면이 사라지고 스레드만 남은 프로세스는 캐시된 프로세스(cached process)가 되어 가장 먼저 종료됨.
+
+| 경우 | 예 | 스레드로는 안 되는 이유 |
+| --- | --- | --- |
+| 사용자가 체감하는 작업이 앱을 떠나도 이어져야 함 → Foreground Service | 음악 재생, 내비게이션, 운동 중 위치 기록 | 스레드만 남으면 언제든 종료됨. Foreground Service는 프로세스를 가시 프로세스(visible process)로 올림 |
+| 다른 앱이나 시스템이 연결해서 써야 함 → Bound Service | 다른 앱에 기능을 제공하는 Service, 입력기, 라이브 배경화면 | 다른 앱은 스레드에 접근할 수 없음. 컴포넌트여야 Intent로 찾고 `IBinder`로 연결 가능 |
+| 여러 화면이 오래 사는 작업 하나를 함께 써야 함 → Bound Service (+ 필요하면 Started) | 여러 화면에서 같은 블루투스 연결 상태를 보는 앱 | 스레드를 Activity에 두면 그 Activity와 함께 정리해야 함. Service는 화면들이 바인딩해 상태를 공유 |
+
+| Service도 아닌 상황 | 맞는 도구 |
+| --- | --- |
+| 사용자가 앱을 쓰는 동안만 하면 됨 | 스레드, 코루틴 |
+| 늦어도 되지만 앱 종료·재부팅 뒤에도 반드시 끝나야 함 | WorkManager |
+| 사용자가 몰라도 되는데 오래 도는 작업 | WorkManager. Foreground 없는 started Service는 앱이 백그라운드로 가고 몇 분 뒤 멈춤 |
+
+- 가르는 질문: 이 작업이 누구의 수명에 묶여야 하는가? 화면 → 스레드·코루틴, 사용자의 체감 → Foreground Service, 작업 그 자체 → WorkManager.
+
 ---
 
 ### 실전 질문: 안드로이드에서 Started 서비스와 Bound 서비스의 차이점은 무엇이며, 각각 언제 사용해야 하나요?
@@ -133,4 +151,4 @@ Foreground는 혼자 설 수 없음. `startForegroundService()`로 **시작**한
 
 ---
 
-출처: 『매니페스트 안드로이드 인터뷰』 52~62쪽, Android Developers [Services overview](https://developer.android.com/develop/background-work/services), [Bound services overview](https://developer.android.com/develop/background-work/services/bound-services), [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager), [Launch a foreground service](https://developer.android.com/develop/background-work/services/fgs/launch), [Background execution limits](https://developer.android.com/about/versions/oreo/background)
+출처: 『매니페스트 안드로이드 인터뷰』 52~62쪽, Android Developers [Services overview](https://developer.android.com/develop/background-work/services), [Bound services overview](https://developer.android.com/develop/background-work/services/bound-services), [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager), [Launch a foreground service](https://developer.android.com/develop/background-work/services/fgs/launch), [Background execution limits](https://developer.android.com/about/versions/oreo/background), [Processes and app lifecycle](https://developer.android.com/guide/components/activities/process-lifecycle)
