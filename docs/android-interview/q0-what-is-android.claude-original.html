@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Q0 안드로이드란</title>
+<style>
+:root{
+  --bg:#f6f7f4; --card:#ffffff; --ink:#1b1f1c; --muted:#5f6b63; --line:#dfe4dc;
+  --accent:#2f9e5b; --accent-ink:#ffffff; --warn:#d9822b; --bad:#c9453b;
+  --l1:#cfe9d8; --l2:#a9dcbc; --l3a:#86cfa2; --l3b:#6fc2c9; --l4:#5aa9d6; --l5:#3f7fc4;
+  --glow:rgba(47,158,91,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101412; --card:#18201b; --ink:#e7efe9; --muted:#9aaba0; --line:#2a352e;
+    --accent:#3ddc84; --accent-ink:#08210f;
+    --l1:#23483a; --l2:#1f5a3f; --l3a:#1d6b45; --l3b:#1b5f68; --l4:#1c4f75; --l5:#1b3d6e;
+    --glow:rgba(61,220,132,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101412; --card:#18201b; --ink:#e7efe9; --muted:#9aaba0; --line:#2a352e;
+  --accent:#3ddc84; --accent-ink:#08210f;
+  --l1:#23483a; --l2:#1f5a3f; --l3a:#1d6b45; --l3b:#1b5f68; --l4:#1c4f75; --l5:#1b3d6e;
+  --glow:rgba(61,220,132,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif}
+main{max-width:920px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:clamp(26px,5vw,38px);line-height:1.2;margin:8px 0 4px}
+h2{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--accent);text-transform:uppercase}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+button:focus-visible{outline:3px solid var(--glow);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.92em;background:var(--bg);padding:1px 6px;border-radius:6px}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:12px;align-items:center}
+.bar{flex:1;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+.xp{font-weight:800;font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
+
+/* 30초 답변 빈칸 */
+.cloze{font-size:18px}
+.blank{display:inline-block;min-width:88px;text-align:center;border-bottom:2px dashed var(--accent);color:transparent;cursor:pointer;padding:0 6px;margin:0 2px;border-radius:6px;transition:.2s}
+.blank.open{color:var(--ink);background:var(--glow);border-bottom-style:solid}
+.bubble{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--bg);border-left:4px solid var(--accent);font-size:14.5px}
+
+/* 뒤집기 카드 */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:12px}
+.flip{perspective:900px;height:190px;border:0;padding:0;background:none}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;padding:14px;backface-visibility:hidden;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--line)}
+.front{background:var(--bg);align-items:center;text-align:center}
+.front .emo{font-size:40px;line-height:1}
+.front b{margin-top:8px}
+.back{transform:rotateY(180deg);background:var(--accent);color:var(--accent-ink);font-size:13.5px;text-align:left}
+
+/* 계층 탑 */
+.stage{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;margin-top:14px}
+@media (max-width:700px){.stage{grid-template-columns:1fr}}
+.tower{display:flex;flex-direction:column;gap:8px;position:relative}
+.lv{display:flex;gap:8px}
+.blk{flex:1;border:0;border-radius:12px;padding:14px 12px;text-align:left;color:#0d1a12;font-weight:700;position:relative;transition:transform .25s, box-shadow .25s, opacity .25s}
+:root[data-theme="dark"] .blk{color:#e9f5ee}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .blk{color:#e9f5ee}}
+.blk small{display:block;font-weight:500;opacity:.8;font-size:12.5px}
+.blk:hover{transform:translateX(4px)}
+.blk.sel{box-shadow:0 0 0 3px var(--accent),0 8px 24px var(--glow);transform:translateX(6px)}
+.blk.dim{opacity:.35}
+.blk.hot{box-shadow:0 0 0 3px var(--warn),0 0 26px var(--warn);transform:scale(1.03)}
+.hw{border:2px dashed var(--line);border-radius:12px;padding:10px;text-align:center;color:var(--muted);font-size:14px;transition:.25s}
+.hw.hot{border-color:var(--warn);color:var(--warn);font-weight:800}
+.token{position:absolute;right:-6px;width:26px;height:26px;border-radius:50%;background:var(--warn);color:#fff;display:grid;place-items:center;font-size:14px;box-shadow:0 0 18px var(--warn);transition:top .6s cubic-bezier(.6,.1,.3,1.2);opacity:0}
+.panel{background:var(--bg);border-radius:14px;padding:16px;min-height:260px}
+.panel h3{margin:0 0 6px}
+.panel ul{padding-left:18px;margin:8px 0}
+.mode{display:flex;gap:6px;margin-top:8px}
+.mode button.on{background:var(--ink);color:var(--bg)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0 0}
+.steps li{padding:6px 0 6px 34px;position:relative;color:var(--muted);font-size:14.5px}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--ink)}
+.steps li.done{color:var(--ink)}
+.steps li.now{color:var(--ink);font-weight:700}
+.steps li.now::before{background:var(--warn);color:#fff}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+/* AOT vs JIT */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.vs div{background:var(--bg);border-radius:12px;padding:12px;font-size:14px}
+.lane{height:28px;border-radius:8px;background:var(--line);position:relative;overflow:hidden;margin:8px 0 4px}
+.lane span{position:absolute;top:0;bottom:0;display:grid;place-items:center;font-size:11.5px;font-weight:700;color:#fff;border-radius:8px}
+
+/* 퀴즈 */
+.order{list-style:none;padding:0;margin:12px 0}
+.order li{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:8px 10px;margin:6px 0;border:2px solid transparent;transition:.2s}
+.order li span{flex:1;font-weight:600}
+.order li.ok{border-color:var(--accent)}
+.order li.no{border-color:var(--bad)}
+.order button{padding:2px 10px}
+.q{margin:18px 0}
+.q p{font-weight:700;margin:0 0 8px}
+.opt{display:block;width:100%;text-align:left;margin:6px 0}
+.opt.ok{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.opt.no{background:var(--bad);color:#fff;border-color:transparent}
+.why{font-size:14px;color:var(--muted);display:none;margin-top:4px}
+.why.show{display:block}
+textarea{width:100%;min-height:150px;font:inherit;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.radar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.radar span{padding:4px 10px;border-radius:99px;border:1px solid var(--line);font-size:13.5px;color:var(--muted);transition:.25s}
+.radar span.hit{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+footer{color:var(--muted);font-size:13px;text-align:center;margin-top:28px}
+</style>
+</head>
+<body>
+<main>
+  <div class="hud">
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+    <div class="xp" id="xp">0 XP</div>
+    <button id="theme" aria-label="테마 전환">◐</button>
+  </div>
+
+  <span class="tag">Manifest Android Interview · 카테고리 0</span>
+  <h1>Q0. 안드로이드란 무엇인가요?</h1>
+  <p><a href="#socraticPractice" style="color:var(--accent)">확인 질문에 직접 답하기</a></p>
+  <p class="sub">빈칸 열기 → 카드 뒤집기 → 탑 탐험 → 요청 여행 → 퀴즈. 행동할 때마다 XP가 쌓임.</p>
+
+  <!-- 1. 30초 답변 -->
+  <section>
+    <span class="tag">Step 1 · 30초 답변</span>
+    <h2>면접에서 첫 문장으로 말할 정의</h2>
+    <p class="sub">밑줄을 눌러 빈칸을 채워 볼 것. 먼저 머릿속으로 떠올린 뒤 열기.</p>
+    <p class="cloze">
+      안드로이드는 스마트폰·태블릿 같은 <span class="blank" data-xp="5">모바일 기기</span>를 위해 설계된
+      <span class="blank" data-xp="5">오픈소스</span> 운영체제. <span class="blank" data-xp="5">구글</span>이 개발·유지 관리하며
+      <span class="blank" data-xp="5">리눅스 커널</span>에 기반함. 광범위한 하드웨어 구성과 기기를 지원하는 유연한 <span class="blank" data-xp="5">플랫폼</span>을 제공함.
+    </p>
+    <div class="bubble">학습 팁: 정의를 설명한 뒤 주요 특징과 계층 구조를 연결해 보세요.</div>
+  </section>
+
+  <!-- 2. 특징 카드 -->
+  <section>
+    <span class="tag">Step 2 · 5대 특징</span>
+    <h2>안드로이드 OS의 주요 특징</h2>
+    <p class="sub">카드를 눌러 뒤집기. 앞면만 보고 설명을 먼저 말해 보면 기억에 더 오래 남음.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- 3. 계층 탑 + 요청 여행 -->
+  <section>
+    <span class="tag">Step 3 · 플랫폼 아키텍처</span>
+    <h2>6개 구성 요소로 쌓은 탑</h2>
+    <p class="sub">위로 갈수록 개발자에게 가깝고, 아래로 갈수록 하드웨어에 가까움. 블록을 눌러 탐험할 것.</p>
+    <div class="mode" role="tablist">
+      <button class="on" data-mode="explore">🔍 탐험 모드</button>
+      <button data-mode="camera">📸 카메라 요청 여행</button>
+      <button data-mode="db">💾 메모 저장 여행</button>
+    </div>
+    <div class="stage">
+      <div class="tower" id="tower">
+        <div class="lv"><button class="blk" data-id="app" style="background:var(--l1)">Applications<small>시스템 앱 · 서드파티 앱</small></button></div>
+        <div class="lv"><button class="blk" data-id="fw" style="background:var(--l2)">Android Framework (APIs)<small>ActivityManager · NotificationManager …</small></button></div>
+        <div class="lv">
+          <button class="blk" data-id="native" style="background:var(--l3a)">Native C/C++ Libraries<small>OpenGL · SQLite · WebKit</small></button>
+          <button class="blk" data-id="art" style="background:var(--l3b)">Android Runtime<small>ART · Core Libraries</small></button>
+        </div>
+        <div class="lv"><button class="blk" data-id="hal" style="background:var(--l4)">HAL<small>하드웨어 추상화 계층</small></button></div>
+        <div class="lv"><button class="blk" data-id="kernel" style="background:var(--l5)">Linux Kernel<small>드라이버 · 메모리 · 프로세스 · 보안</small></button></div>
+        <div class="hw" id="hw">⚙️ 실제 하드웨어 (카메라 센서, 저장소, Wi-Fi 칩 …)</div>
+        <div class="token" id="token">●</div>
+      </div>
+      <div class="panel" id="panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- 4. AOT vs JIT -->
+  <section>
+    <span class="tag">Step 4 · 각주 속 보물</span>
+    <h2>ART의 AOT와 JIT, 언제 기계어가 되나</h2>
+    <p class="sub">책 각주에 숨어 있는 개념. 면접에서 ART를 말하면 꼬리 질문으로 자주 이어짐.</p>
+    <div class="vs">
+      <div>
+        <b>AOT (Ahead-of-Time)</b>
+        <div class="lane"><span style="left:0;width:38%;background:var(--l5)">미리 컴파일</span><span style="left:40%;width:60%;background:var(--accent)">바로 실행</span></div>
+        런타임 <b>전에</b> 기계어로 변환. 실행 중 JIT가 필요 없어 런타임 오버헤드가 줄어듦.
+      </div>
+      <div>
+        <b>JIT (Just-in-Time)</b>
+        <div class="lane"><span style="left:0;width:22%;background:var(--warn)">실행</span><span style="left:24%;width:20%;background:var(--l5)">변환</span><span style="left:46%;width:22%;background:var(--warn)">실행</span><span style="left:70%;width:30%;background:var(--l5)">변환</span></div>
+        실행 <b>직전</b>에 동적으로 변환. 실제 실행 패턴을 보고 자주 쓰는 코드 경로를 최적화함.
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 퀴즈 -->
+  <section>
+    <span class="tag">Step 5 · 퀴즈</span>
+    <h2>① 탑 다시 쌓기</h2>
+    <p class="sub">위(앱)에서 아래(하드웨어 쪽) 순서로 정렬. ▲▼로 옮긴 뒤 채점.</p>
+    <ol class="order" id="order"></ol>
+    <div class="row"><button class="primary" id="checkOrder">채점</button><button id="shuffle">다시 섞기</button><span id="orderMsg"></span></div>
+
+    <h2 style="margin-top:28px">② 객관식</h2>
+    <div id="mcq"></div>
+
+    <h2 style="margin-top:28px">③ 실전 질문 · 키워드 레이더</h2>
+    <p class="sub"><b>Q.</b> 안드로이드 플랫폼 아키텍처는 Linux Kernel, ART, HAL 등 여러 계층으로 구성됨. 이 구성 요소들이 애플리케이션 실행과 하드웨어와의 상호 작용을 위해 어떻게 작동하는지 설명해 볼 것.</p>
+    <textarea id="answer" placeholder="Step 3의 카메라 여행을 떠올리며 자기 말로 써 보기. 입력하는 동안 아래 키워드에 불이 들어옴."></textarea>
+    <div class="radar" id="radar"></div>
+    <p class="note">레이더는 키워드 포함 여부만 봄. 계층 사이의 "흐름"이 설명되었는지는 스스로 점검할 것.</p>
+  </section>
+
+  <footer>출처: 엄재웅, 『매니페스트 안드로이드 인터뷰(한국어판)』 Q0 (11~15쪽) · 요청 여행 시나리오는 이해를 돕기 위해 단순화한 일반 흐름</footer>
+</main>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+};
+
+/* XP: 같은 행동은 한 번만 적립 */
+const MAX_XP = 225, earned = new Set();
+let xp = 0;
+function gain(key, n){
+  if (earned.has(key)) return;
+  earned.add(key); xp = Math.min(MAX_XP, xp + n);
+  $('#xp').textContent = xp + ' XP';
+  $('#bar').style.width = (xp / MAX_XP * 100) + '%';
+}
+
+/* 테마 */
+$('#theme').onclick = () => {
+  const r = document.documentElement, dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur = r.dataset.theme || (dark ? 'dark' : 'light');
+  r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+};
+
+/* Step 1 */
+$$('.blank').forEach((b,i) => b.onclick = () => { b.classList.add('open'); gain('blank'+i, 5); });
+
+/* Step 2 */
+const FEATURES = [
+  ['🔓','오픈 소스 · 커스텀화','AOSP로 공개되어 제조사·개발자가 필요에 맞게 수정 가능. 웨어러블, TV, IoT까지 퍼진 원동력.'],
+  ['🧰','SDK로 앱 개발','Java/Kotlin + Android SDK로 개발. Android Studio로 설계·개발·디버그.'],
+  ['🛍️','풍부한 앱 생태계','Google Play가 공식 배포처. 서드파티 스토어나 직접 다운로드로도 배포 가능.'],
+  ['🔀','멀티태스킹 · 리소스 관리','여러 앱 동시 실행. 관리형 메모리와 효율적인 가비지 컬렉션으로 성능 최적화.'],
+  ['📱','다양한 하드웨어 지원','저가형부터 플래그십까지. 다양한 화면 크기·해상도·하드웨어와 호환.']
+];
+$('#cards').innerHTML = FEATURES.map((f,i) =>
+  `<button class="flip" data-i="${i}" aria-label="${f[1]} 카드 뒤집기"><div class="in">
+     <div class="face front"><span class="emo">${f[0]}</span><b>${f[1]}</b></div>
+     <div class="face back">${f[2]}</div></div></button>`).join('');
+$$('.flip').forEach(c => c.onclick = () => { c.classList.toggle('on'); gain('card'+c.dataset.i, 6); });
+
+/* Step 3: 계층 정보 */
+const LAYERS = {
+  app:{t:'Applications',d:'최상위 계층. 연락처·설정 같은 시스템 앱과 SDK로 만든 서드파티 앱 등 모든 유저 기반 앱이 여기에 속함.',ex:['하위 계층과 통신해 사용자에게 기능 제공','우리가 매일 만드는 앱이 사는 곳']},
+  fw:{t:'Android Framework (APIs)',d:'앱 개발용 고수준 서비스와 API를 제공. 개발자가 시스템 기능을 효율적으로 쓰게 해 주는 창구.',ex:['ActivityManager','NotificationManager','Content Providers']},
+  native:{t:'Native C/C++ Libraries',d:'중요 기능을 위한 C/C++ 라이브러리 모음. 프레임워크와 앱이 성능 집약적인 작업에 직접 사용.',ex:['OpenGL: 그래픽 렌더링','SQLite: 데이터베이스','WebKit: 웹 콘텐츠 표시']},
+  art:{t:'Android Runtime (ART) · Core Libraries',d:'Kotlin/Java에서 컴파일된 바이트코드로 앱을 실행. AOT와 JIT 컴파일을 모두 지원. 코어 라이브러리는 자료구조·파일·스레딩 API 제공.',ex:['AOT: 실행 전 미리 기계어로','JIT: 실행 직전 동적 변환 (Step 4 참고)']},
+  hal:{t:'Hardware Abstraction Layer (HAL)',d:'Java API 프레임워크를 기기 하드웨어에 연결하는 표준 인터페이스. 카메라, Bluetooth처럼 구성 요소별 라이브러리 모듈로 구성.',ex:['프레임워크가 하드웨어 접근을 요청하면','시스템이 해당 HAL 모듈을 동적으로 로드해 처리']},
+  kernel:{t:'Linux Kernel',d:'운영체제의 기반. 하드웨어 추상화를 처리해 소프트웨어와 하드웨어의 상호 작용을 보장.',ex:['메모리 · 프로세스 관리','보안 강화','Wi-Fi, Bluetooth, 디스플레이 등 장치 드라이버']}
+};
+const JOURNEYS = {
+  camera:{t:'📸 사진 버튼을 누르면',steps:[
+    ['app','앱의 촬영 버튼 클릭 → 앱 코드가 카메라 API 호출 (이 코드를 ART가 실행)'],
+    ['art','ART가 앱의 바이트코드를 기계어로 실행하며 프레임워크 API로 진입'],
+    ['fw','프레임워크의 카메라 API가 시스템 카메라 서비스에 요청 전달'],
+    ['native','C++로 작성된 네이티브 카메라 서비스가 요청 처리'],
+    ['hal','카메라 HAL 모듈이 로드되어 제조사별 하드웨어 차이를 감춤'],
+    ['kernel','커널의 카메라 드라이버가 센서를 실제로 제어'],
+    ['hw','센서 촬영! 이미지 데이터가 같은 길을 거슬러 올라가 앱 화면에 표시']
+  ]},
+  db:{t:'💾 메모를 DB에 저장하면',steps:[
+    ['app','저장 버튼 클릭 → 앱이 DB 저장 코드 호출'],
+    ['art','ART가 앱 코드를 실행'],
+    ['fw','프레임워크의 데이터베이스 API가 쿼리를 받음'],
+    ['native','네이티브 라이브러리 SQLite가 실제 쿼리 수행'],
+    ['kernel','커널이 파일시스템을 통해 저장소에 기록'],
+    ['hw','플래시 저장소에 저장 완료. 이 여행에선 HAL을 거치지 않음!']
+  ]}
+};
+let mode = 'explore', step = -1, timer = null;
+
+function clearHi(){ $$('.blk').forEach(b => b.classList.remove('sel','dim','hot')); $('#hw').classList.remove('hot'); $('#token').style.opacity = 0; }
+function showLayer(id){
+  clearHi();
+  const b = $(`.blk[data-id="${id}"]`); b.classList.add('sel');
+  $$('.blk').forEach(x => x !== b && x.classList.add('dim'));
+  const L = LAYERS[id];
+  $('#panel').innerHTML = `<h3>${L.t}</h3><p>${L.d}</p><ul>${L.ex.map(e=>`<li>${e}</li>`).join('')}</ul>`;
+  gain('layer'+id, 5);
+}
+function renderJourney(){
+  const J = JOURNEYS[mode];
+  $('#panel').innerHTML = `<h3>${J.t}</h3>
+    <div class="row"><button class="primary" id="next">${step >= J.steps.length-1 ? '처음부터 ↺' : '다음 단계 ▶'}</button><button id="auto">자동 재생</button></div>
+    <ol class="steps">${J.steps.map((s,i)=>`<li class="${i<step?'done':i===step?'now':''}">${s[1]}</li>`).join('')}</ol>
+    <p class="note">이해를 돕기 위해 단순화한 흐름. 실제로는 Binder IPC 등 더 많은 단계가 있음.</p>`;
+  $('#next').onclick = () => { stopAuto(); advance(); };
+  $('#auto').onclick = () => { stopAuto(); if (step >= J.steps.length-1) step = -1; timer = setInterval(() => { advance(); if (step >= JOURNEYS[mode].steps.length-1) stopAuto(); }, 1400); };
+  clearHi();
+  if (step < 0) return;
+  const id = J.steps[step][0], tok = $('#token');
+  $$('.blk').forEach(b => b.classList.add('dim'));
+  const el = id === 'hw' ? $('#hw') : $(`.blk[data-id="${id}"]`);
+  el.classList.remove('dim'); el.classList.add('hot');
+  tok.style.opacity = 1;
+  tok.style.top = (el.offsetTop + el.offsetHeight/2 - 13) + 'px';
+}
+function advance(){
+  const n = JOURNEYS[mode].steps.length;
+  step = step >= n-1 ? -1 : step + 1;
+  if (step === n-1) gain('journey'+mode, 15);
+  renderJourney();
+}
+function stopAuto(){ clearInterval(timer); timer = null; }
+
+$$('.mode button').forEach(b => b.onclick = () => {
+  stopAuto();
+  $$('.mode button').forEach(x => x.classList.toggle('on', x === b));
+  mode = b.dataset.mode; step = -1;
+  if (mode === 'explore'){ clearHi(); $('#panel').innerHTML = '<h3>👈 블록을 눌러 보기</h3><p>각 계층이 맡은 일과 대표 예시가 여기 나타남.</p><p class="note">Native Libraries와 ART는 공식 다이어그램에서 같은 높이에 나란히 위치함.</p>'; }
+  else renderJourney();
+});
+$$('.blk').forEach(b => b.onclick = () => { if (mode === 'explore') showLayer(b.dataset.id); });
+$('.mode button').click();
+
+/* Step 5-①: 순서 맞추기 */
+const ORDER = ['Applications','Android Framework','Native Libraries + ART','HAL','Linux Kernel'];
+let cur = [];
+function drawOrder(mark){
+  $('#order').innerHTML = cur.map((t,i) =>
+    `<li class="${mark ? (t===ORDER[i]?'ok':'no') : ''}"><span>${t}</span>
+      <button aria-label="위로" data-u="${i}">▲</button><button aria-label="아래로" data-d="${i}">▼</button></li>`).join('');
+  $$('#order [data-u]').forEach(b => b.onclick = () => swap(+b.dataset.u, +b.dataset.u - 1));
+  $$('#order [data-d]').forEach(b => b.onclick = () => swap(+b.dataset.d, +b.dataset.d + 1));
+}
+function swap(a,b){ if (b<0 || b>=cur.length) return; [cur[a],cur[b]] = [cur[b],cur[a]]; $('#orderMsg').textContent=''; drawOrder(false); }
+function shuffle(){
+  do { cur = [...ORDER].sort(() => Math.random() - .5); } while (cur.join() === ORDER.join());
+  $('#orderMsg').textContent = ''; drawOrder(false);
+}
+$('#shuffle').onclick = shuffle;
+$('#checkOrder').onclick = () => {
+  drawOrder(true);
+  const ok = cur.join() === ORDER.join();
+  $('#orderMsg').textContent = ok ? '🎉 완벽하게 쌓았음!' : '빨간 칸을 다시 옮겨 볼 것';
+  if (ok) gain('order', 20);
+};
+shuffle();
+
+/* Step 5-②: 객관식 */
+const MCQ = [
+  {q:'안드로이드가 기반으로 하는 커널은?',o:['Windows NT 커널','리눅스 커널','XNU 커널','Zircon 커널'],a:1,w:'구글이 개발·유지 관리하며 리눅스 커널에 기반함.'},
+  {q:'프레임워크 API를 카메라·Bluetooth 같은 하드웨어에 연결하는 표준 인터페이스 계층은?',o:['ART','Native Libraries','HAL','Applications'],a:2,w:'HAL은 구성 요소별 모듈로 이루어지고, 요청 시 해당 모듈이 동적으로 로드됨.'},
+  {q:'SQLite, OpenGL, WebKit이 속한 계층은?',o:['Android Framework','Native C/C++ Libraries','Linux Kernel','HAL'],a:1,w:'C/C++로 작성된 네이티브 라이브러리 모음. 성능 집약적 작업에 사용됨.'},
+  {q:'실제 실행 패턴을 보고 자주 쓰는 코드 경로를 실행 직전에 최적화하는 방식은?',o:['AOT','JIT','R8','Dex'],a:1,w:'JIT는 실행 직전 동적 변환, AOT는 런타임 전에 미리 변환.'},
+  {q:'ActivityManager, NotificationManager가 제공되는 계층은?',o:['Applications','Android Framework','ART','Linux Kernel'],a:1,w:'프레임워크 계층은 앱 개발용 고수준 서비스와 API를 제공함.'},
+  {q:'메모리·프로세스 관리, 보안, 장치 드라이버를 책임지는 계층은?',o:['HAL','Linux Kernel','ART','Android Framework'],a:1,w:'리눅스 커널이 OS의 기반으로서 이 책임을 맡음.'}
+];
+$('#mcq').innerHTML = MCQ.map((m,i) => `<div class="q"><p>${i+1}. ${m.q}</p>${m.o.map((o,j)=>`<button class="opt" data-q="${i}" data-j="${j}">${o}</button>`).join('')}<div class="why" id="why${i}">💡 ${m.w}</div></div>`).join('');
+$$('.opt').forEach(b => b.onclick = () => {
+  const i = +b.dataset.q, j = +b.dataset.j, m = MCQ[i];
+  if (earned.has('mcq'+i) || earned.has('mcqx'+i)) return;
+  $$(`.opt[data-q="${i}"]`).forEach(x => { if (+x.dataset.j === m.a) x.classList.add('ok'); });
+  if (j !== m.a) { b.classList.add('no'); earned.add('mcqx'+i); } else gain('mcq'+i, 10);
+  $('#why'+i).classList.add('show');
+});
+
+/* Step 5-③: 키워드 레이더 */
+const KEYS = [['커널',/커널|kernel/i],['드라이버',/드라이버|driver/i],['HAL',/hal|하드웨어 추상화/i],['ART',/\bart\b|런타임|runtime/i],['바이트코드',/바이트\s?코드|bytecode/i],['프레임워크',/프레임워크|framework/i],['네이티브',/네이티브|native|c\+\+/i],['AOT/JIT',/aot|jit/i],['앱',/앱|애플리케이션|app/i]];
+$('#radar').innerHTML = KEYS.map(k => `<span>${k[0]}</span>`).join('');
+const ta = $('#answer');
+ta.value = store.get('q0-answer') || '';
+function scan(){
+  const spans = $$('#radar span'); let hits = 0;
+  KEYS.forEach((k,i) => { const h = k[1].test(ta.value); spans[i].classList.toggle('hit', h); hits += h; });
+  if (hits === KEYS.length) gain('radar', 30);
+  store.set('q0-answer', ta.value);
+}
+ta.oninput = scan; scan();
+</script>
+<style>
+.section-practice{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.section-practice h3{margin:0 0 8px;font-size:18px}
+.section-practice .answer-field{margin:18px 0}
+.section-practice label{display:block;font-weight:600;margin-bottom:8px}
+.section-practice textarea{min-height:110px}
+.section-practice .answer-status{font-size:13px;color:var(--muted);margin:6px 0}
+#cameraLab .section-practice{margin:0;padding:24px 28px;border-top:1px solid var(--line)}
+</style>
+<script id="socraticAnswers" type="application/json">{"schemaVersion":2,"variant":"claude","answers":[]}</script>
+<script>
+(function(){
+  const source=document.getElementById('socraticAnswers');
+  let embedded={};try{embedded=JSON.parse(source.textContent);}catch{}
+  const variant=embedded.variant==='claude'?'claude':'codex';
+  const questions=[
+    {id:'definition',group:'definition',text:'안드로이드란 무엇인가요? 내 말로 한 문장으로 정의해 보세요.'},
+    {id:'kernel',group:'definition',text:'Linux 커널만으로 안드로이드 전체를 설명할 수 없는 이유는 무엇인가요?'},
+    {id:'features',group:'features',text:'안드로이드의 특징 하나를 골라, 앱 개발자 또는 기기 제조사에게 어떤 의미가 있는지 설명해 보세요.'},
+    {id:'camera-choice',group:variant==='codex'?'camera':'architecture',text:'커스텀 촬영 화면을 내 앱 안에 만들 때, Intent와 CameraManager 중 무엇을 선택하겠나요? 이유도 적어 보세요.'},
+    {id:'camera-flow',group:'architecture',text:'내 앱이 카메라를 직접 제어할 때 Framework API부터 하드웨어까지 요청이 어떻게 전달되나요?'},
+    {id:'hal',group:'architecture',text:'기기마다 카메라 하드웨어가 다른데도 앱이 공통 API를 사용할 수 있는 이유는 무엇인가요? HAL의 역할을 설명해 보세요.'},
+    {id:'art',group:'architecture',text:'ART는 어떤 역할을 하나요? 카메라 요청이 지나가는 정거장이라고 설명해도 될까요?'},
+    {id:'jit',group:'compilation',text:'AOT와 JIT는 코드를 언제 컴파일하나요? JIT가 호출할 때마다 다시 컴파일한다는 뜻인지도 설명해 보세요.'},
+    {id:'summary',group:'quiz',text:'지금까지 배운 내용을 바탕으로 안드로이드를 다시 설명해 보세요. 운영체제의 기반과 앱 실행 환경을 연결해 보세요.'}
+  ];
+  const storageKey='q0-socratic-answers-v1-'+variant;
+  let stored={};try{stored=JSON.parse(localStorage.getItem(storageKey)||'{}');}catch{}
+  const initial=Array.isArray(embedded.answers)&&embedded.answers.length?embedded:stored;
+  const answers=Object.fromEntries(questions.map(q=>[q.id,'']));
+  if(Array.isArray(initial.answers))initial.answers.forEach(a=>{if(a&&Object.hasOwn(answers,a.id)&&typeof a.answer==='string')answers[a.id]=a.answer;});
+  document.querySelectorAll('.section-practice').forEach(el=>el.remove());
+  const sections=[...document.querySelectorAll('main > section')];
+  const offset=variant==='codex'?1:0;
+  const targets={camera:sections[0],definition:sections[offset],features:sections[offset+1],architecture:sections[offset+2],compilation:sections[offset+3],quiz:sections[offset+4]};
+  function snapshot(){return {schemaVersion:2,variant,answers:questions.map(q=>({id:q.id,question:q.text,answer:answers[q.id]}))};}
+  function save(){
+    let message='이 브라우저에 임시 저장됨';
+    try{localStorage.setItem(storageKey,JSON.stringify(snapshot()));}
+    catch{message='임시 저장 불가 · 답변 포함 HTML로 저장하세요';}
+    document.querySelectorAll('.answer-status').forEach(el=>{el.textContent=message;});
+  }
+  function exportAnswers(){
+    document.querySelectorAll('[data-answer-id]').forEach(el=>{answers[el.dataset.answerId]=el.value;});save();
+    const copy=document.documentElement.cloneNode(true);
+    copy.querySelector('#socraticAnswers').textContent=JSON.stringify(snapshot()).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+    copy.querySelectorAll('[data-answer-id]').forEach(el=>{el.textContent=answers[el.dataset.answerId];});
+    const blob=new Blob(['<!doctype html>\n'+copy.outerHTML],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download='q0-'+variant+'-answers.html';document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    document.querySelectorAll('.answer-status').forEach(el=>{el.textContent='모든 섹션의 답변을 포함한 HTML 다운로드를 요청했습니다. 저장한 파일을 채팅에 전달해 주세요.';});
+  }
+  Object.entries(targets).forEach(([group,target])=>{
+    const relevant=questions.filter(q=>q.group===group);
+    if(!target||!relevant.length)return;
+    const panel=document.createElement('div');panel.className='section-practice';
+    panel.id=group==='definition'?'socraticPractice':'practice-'+group;
+    const title=document.createElement('h3');title.textContent='확인 질문 · 내 말로 설명하기';panel.append(title);
+    relevant.forEach(q=>{
+      const field=document.createElement('div');field.className='answer-field';
+      const label=document.createElement('label');label.htmlFor='practice-answer-'+q.id;label.textContent=q.text;
+      const input=document.createElement('textarea');input.id=label.htmlFor;input.dataset.answerId=q.id;
+      input.placeholder='아는 만큼 적어 보세요. 모르는 부분은 모른다고 써도 괜찮습니다.';input.value=answers[q.id];
+      input.addEventListener('input',()=>{answers[q.id]=input.value;save();});
+      field.append(label,input);panel.append(field);
+    });
+    const button=document.createElement('button');button.type='button';button.className='primary';
+    button.textContent='모든 답변 포함 HTML 저장';button.onclick=exportAnswers;panel.append(button);
+    const status=document.createElement('p');status.className='answer-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+    status.textContent='답변은 브라우저에 임시 저장됩니다. HTML 저장 버튼은 모든 섹션의 답변을 함께 저장합니다.';panel.append(status);
+    target.append(panel);
+  });
+})();
+</script>
+</body>
+</html>

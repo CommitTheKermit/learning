@@ -1,0 +1,5 @@
+*.pdf
+docs/mission-43/
+.playwright-mcp/
+tmp/
+.DS_Store
