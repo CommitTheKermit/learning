@@ -17,7 +17,7 @@
 | --- | --- | --- |
 | 시작 | `startService()` | `bindService()` |
 | 통신 방향 | 한 방향. Intent를 보내고 끝 | 양방향. `IBinder`로 메서드 직접 호출 |
-| 수명을 정하는 주체 | Service 자신. `stopSelf()`/`stopService()`로 종료 | 클라이언트. 마지막 클라이언트가 unbind하면 종료 |
+| 수명을 정하는 주체 | Service 자신이 `stopSelf()` 혹은 다른 컴포넌트가 `stopService()`로 종료 | 클라이언트. 마지막 클라이언트가 unbind하면 종료 |
 | 사용 예 | 화면을 닫아도 계속되는 작업 | 화면이 Service에 계속 묻는 작업 |
 
 - Started/Bound는 Service의 종류가 아니라 **시작 방식**.
@@ -34,18 +34,26 @@
 - Android 8.0+: 백그라운드 상태에서 `startService()` → `IllegalStateException`. `startForegroundService()` 후 5초 안에 `startForeground()`.
 - Android 14+: 포그라운드 서비스 유형(foreground service type) 필수. 없으면 `MissingForegroundServiceTypeException`.
 
+![원문 55쪽 Service 유형 간 차이점 표](https://raw.githubusercontent.com/CommitTheKermit/learning/main/docs/android-interview/images/q9/book-p55-service-types-table.png)
+
+*원문 55쪽 표. 세 가지를 같은 "유형"처럼 나란히 놓았지만, Started/Bound는 시작 방식이고 Foreground는 우선순위와 알림 표시라는 다른 기준임.*
+
 ---
 
 ## 4. 생명주기
 
-![Service 생명주기](https://developer.android.com/static/images/service_lifecycle.png)
+![Service 생명주기](https://raw.githubusercontent.com/CommitTheKermit/learning/main/docs/android-interview/images/q9/book-fig31-service-lifecycle.png)
 
-*출처: Android Developers, Services overview*
+*출처: 원문 59쪽 그림 31*
 
 - `onCreate()`: 처음 생성될 때 한 번.
 - `onStartCommand()`: `startService()` 호출마다 **매번**.
 - `onBind()`: **첫 클라이언트** 때 한 번. 이후 클라이언트는 같은 `IBinder`를 받음.
 - `onUnbind()`가 `true` 반환 → 살아 있는 Service에 클라이언트가 돌아오면 `onRebind()`.
+
+![started이면서 bound인 Service의 생명주기](https://developer.android.com/static/images/fundamentals/service_binding_tree_lifecycle.png)
+
+*출처: Android Developers, Bound services overview. started이면서 bound인 Service의 흐름 (`onRebind()` 포함)*
 
 | `onStartCommand()` 반환값 | 강제 종료 후 |
 | --- | --- |
@@ -78,7 +86,9 @@
 
 ---
 
-## 7. 용어 정리
+### 실전 질문: 안드로이드에서 Started 서비스와 Bound 서비스의 차이점은 무엇이며, 각각 언제 사용해야 하나요?
+
+## 7. 용어집
 
 | 용어 | 뜻 |
 | --- | --- |
